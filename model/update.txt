@@ -1,0 +1,26 @@
+model
+{
+    mu.V0_new <- 0.00000E+00
+    mu.V1_new <- 0.00000E+00
+    sigma.V0_new <- 1/sqrt(tau.V0_new)
+    sigma.V1_new <- 1/sqrt(tau.V1_new)
+    Sigma.B_new[1, 1] <- pow(sigma.V0_new, 2)
+    Sigma.B_new[2, 2] <- pow(sigma.V1_new, 2)
+    Sigma.B_new[1, 2] <- rho_new * sigma.V0_new * sigma.V1_new
+    Sigma.B_new[2, 1] <- Sigma.B_new[1, 2]
+    covariance_new <- Sigma.B_new[1, 2]
+    Tau.B_new[1:2, 1:2] <- inverse(Sigma.B_new[, ])
+    sigma_new <- 1/sqrt(tau_new)
+    for (i in 1:nid_new) {
+        B.hat_new[i, 1] <- mu.V0_new
+        B.hat_new[i, 2] <- mu.V1_new
+        B_new[i, 1:2] ~ dmnorm(B.hat_new[i, ], Tau.B_new[, ])
+        V0_new[i] <- B_new[i, 1]
+        V1_new[i] <- B_new[i, 2]
+    }
+    for (i in 1:n_new) {
+        y_new[i] ~ dnorm(mu_new[i], tau_new)
+        mu_new[i] <- beta0_new + V0_new[id_new[i]] + (beta1_new + 
+            V1_new[id_new[i]]) * time_new[i]
+    }
+}
