@@ -1,7 +1,7 @@
 #Preparation
 
 # List of packages for session
-.packages = c("ggplot2", "plyr", "dplyr", "ggpubr","shiny","DT","simstudy","R2OpenBUGS")
+.packages = c("ggplot2", "plyr", "dplyr", "ggpubr","shiny","DT","simstudy","R2OpenBUGS","rstudioapi")
 
 # Install CRAN packages (if not already installed)
 .inst <- .packages %in% installed.packages()
@@ -9,6 +9,15 @@ if(length(.packages[!.inst]) > 0) install.packages(.packages[!.inst])
 
 # Load packages into session 
 lapply(.packages, require, character.only=TRUE)
+
+setwd(dirname(rstudioapi::getSourceEditorContext()$path))
+
+# Define environments to save outputs
+dpm <- new.env()
+fitenvir <- new.env()
+predictenvir <- new.env()
+
+
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -42,6 +51,7 @@ ui <- fluidPage(
                        p(strong("Minimal time distance between 2 timepoints (time units) = 0.5")),
                        p(strong("Maximal time distance between 2 timepoints (time units) = 3")),
                        p(strong("Random seed = 11")),
+                       actionButton("create","Create data"),
                        fluid=T)               ),
       conditionalPanel(
         condition = "input.dataset == 'create'",
@@ -60,7 +70,8 @@ ui <- fluidPage(
         numericInput("ncount","Average number of timepoints per individual",10),
         numericInput("min.interval","Minimal time distance between 2 timepoints (time units)",0.5),
         numericInput("max.interval","Maximal time distance between 2 timepoints (time units)",3),
-        numericInput("seed", "Random seed", 11, min = 1, max = .Machine$integer.max)
+        numericInput("seed", "Random seed", 11, min = 1, max = .Machine$integer.max),
+        actionButton("create2","Create data")
       )),
     
     # Main panel for displaying outputs ----
@@ -81,6 +92,7 @@ ui <- fluidPage(
                                       actionButton("example.data", "Save data"))),
                            
                            tabPanel("Model input", 
+                                    #actionButton("load","Load data for MCMC"),
                                     helpText("Input parameters for prediction"),
                                     uiOutput("max.id.fit"),
                                     uiOutput("id.update"),
@@ -115,13 +127,7 @@ ui <- fluidPage(
 
 
 server <- function(input, output) {
-  
-  
-  # Define environments to save outputs
-  dpm <- new.env()
-  fitenvir <- new.env()
-  predictenvir <- new.env()
-  
+
   # Call functions
   source("functions/simulate.R")
   source("functions/fit_model.R")
@@ -132,7 +138,7 @@ server <- function(input, output) {
   source("functions/plot.R")
   
   # Call simulated data, if "create" chosen
-  simtab <- reactive({simulate(nid=input$nid,beta0=input$beta0,beta1=input$beta1,sd.y=input$sd.y,V0=input$V0,sigma0=input$sigma0,V1=input$V1,sigma1=input$sigma1,rho=input$rho,ncount=input$ncount,min.interval=input$min.interval,max.interval=input$max.interval,seed=input$seed)})
+  simtab <- eventReactive(input$create2, {simulate(nid=input$nid,beta0=input$beta0,beta1=input$beta1,sd.y=input$sd.y,V0=input$V0,sigma0=input$sigma0,V1=input$V1,sigma1=input$sigma1,rho=input$rho,ncount=input$ncount,min.interval=input$min.interval,max.interval=input$max.interval,seed=input$seed)})
   
   observeEvent(input$create.data, {
     write.csv(simtab()[[2]],"output/simdata.csv",row.names = F)
@@ -153,7 +159,7 @@ server <- function(input, output) {
   output$simplot <- renderPlot({simplot()})
   
   # Call example data, if "example" chosen    
-  example <- reactive({simulate(nid=50,beta0=15,beta1=0.5,sd.y=10,V0=0,sigma0=10,V1=0,sigma1=5,rho=0.7,ncount=10,min.interval=0.5,max.interval=3,seed=11)})
+  example <-eventReactive(input$create, {simulate(nid=50,beta0=15,beta1=0.5,sd.y=10,V0=0,sigma0=10,V1=0,sigma1=5,rho=0.7,ncount=10,min.interval=0.5,max.interval=3,seed=11)})
   
   observeEvent(input$example.data, {
     write.csv(example()[[2]],"output/simdata.csv",row.names = F)
@@ -171,7 +177,9 @@ server <- function(input, output) {
       theme_pubr()})
   output$exampleplot <- renderPlot({exampleplot()})
   
-  
+  dattab <- read.csv("output/simdata.csv")
+
+ 
   output$max.id.fit <- renderUI({numericInput("max.id.fit","Number of individuals included in the first part of the data set. (This part will be used to estimate the fixed effects, residuals SD, correlation, and SD of the random effects)",input$nid-1,min=10,max=input$nid-1)})
   
   output$id.update<- renderUI({numericInput("id.update","Enter the individual ID, of whom the random effects and the future outcome will be predicted.",input$nid,min=11,max=input$nid)})
@@ -179,12 +187,13 @@ server <- function(input, output) {
 
   output$timeID<- renderUI({
 
-    selectInput("time.plot","Enter the time point, from which the future outcome will be predicted.",choices=dattab$time[dattab$id==input$id.update] )})
+    selectInput("time.plot","Enter the time point, for which the future outcome will be predicted.",choices=dattab$time[dattab$id==input$id.update] )})
   
-  dattab <- read.csv("output/simdata.csv")
+
   
   # Run predict function
   predict <- eventReactive(input$go, {
+  
     # reactive({
     withProgress(message = 'Running MCMC ...', value = 0, {
       for (i in dattab$time[dattab$id==input$id.update]) {run_predict(dattab=dattab,max.id.fit=input$max.id.fit,id.update=input$id.update,start.time.update=i,seed=input$seed,nt=input$nt,nc=input$nc,nb=input$nb,ni=input$ni)
@@ -212,3 +221,4 @@ server <- function(input, output) {
 
 # Run app
 shiny::shinyApp(ui,server)
+

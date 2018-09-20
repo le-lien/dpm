@@ -28,6 +28,12 @@ Source: CRAN
 Version: 0.12.14
 Hash: f9a2a481350397e53b0768bf488329cd
 
+Package: RcppArmadillo
+Source: CRAN
+Version: 0.9.100.5.0
+Hash: 74ffad9e443495a5b34e5bc86b3d0438
+Requires: Rcpp
+
 Package: assertthat
 Source: CRAN
 Version: 0.2.0
@@ -44,6 +50,11 @@ Version: 0.2
 Hash: 7f7dcd1dc351f84798fd3dc4eb8a0e78
 Requires: Rcpp, bindr, plogr
 
+Package: coda
+Source: CRAN
+Version: 0.19-1
+Hash: e5aff7792ef292cd4306e58e25e403fe
+
 Package: colorspace
 Source: CRAN
 Version: 1.3-2
@@ -54,6 +65,17 @@ Source: CRAN
 Version: 0.9.2
 Hash: 0906730256b0ac0a7ca35da4b0187e0a
 Requires: ggplot2, gtable, plyr, scales
+
+Package: crosstalk
+Source: CRAN
+Version: 1.0.0
+Hash: c13adea5906fbe2becfcb5f843b26749
+Requires: R6, ggplot2, htmltools, jsonlite, lazyeval, shiny
+
+Package: data.table
+Source: CRAN
+Version: 1.11.6
+Hash: 307ebb36305b06bd469f4f3a4bb765e2
 
 Package: dichromat
 Source: CRAN
@@ -163,6 +185,11 @@ Version: 0.4.3
 Hash: f96d896947fcaf9b6d0074002e9f4f9d
 Requires: colorspace
 
+Package: mvtnorm
+Source: CRAN
+Version: 1.0-8
+Hash: 09985635b09071a1d81d6811b92846ea
+
 Package: packrat
 Source: CRAN
 Version: 0.4.9-3
@@ -259,3 +286,8 @@ Package: xtable
 Source: CRAN
 Version: 1.8-2
 Hash: 7293235cfcc14cdff1ce7fd1a0212031
+
+Package: yaml
+Source: CRAN
+Version: 2.2.0
+Hash: a5ad5616d83d89f8d84cbf3cf4034e13
