@@ -8,3 +8,6 @@ Command for version control
 packrat::init("~/applications/my-shiny-app") 
 packrat::snapshot()
 packrat::bundle()
+
+Command to call app from github
+shiny::runGitHub( "dpm", "le-lien") 
