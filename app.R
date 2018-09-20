@@ -10,20 +10,6 @@ if(length(.packages[!.inst]) > 0) install.packages(.packages[!.inst])
 # Load packages into session 
 lapply(.packages, require, character.only=TRUE)
 
-# Define environments to save outputs
-dpm <- new.env()
-fitenvir <- new.env()
-predictenvir <- new.env()
-
-# Call functions
-source("functions/simulate.R")
-source("functions/fit_model.R")
-source("functions/update_model.R")
-source("functions/openbugs_predict.R")
-source("functions/run_predict.R")
-source("functions/summary.R")
-source("functions/plot.R")
-
 # Define UI for application that draws a histogram
 ui <- fluidPage(
   
@@ -130,6 +116,21 @@ ui <- fluidPage(
 
 server <- function(input, output) {
   
+  
+  # Define environments to save outputs
+  dpm <- new.env()
+  fitenvir <- new.env()
+  predictenvir <- new.env()
+  
+  # Call functions
+  source("functions/simulate.R")
+  source("functions/fit_model.R")
+  source("functions/update_model.R")
+  source("functions/openbugs_predict.R")
+  source("functions/run_predict.R")
+  source("functions/summary.R")
+  source("functions/plot.R")
+  
   # Call simulated data, if "create" chosen
   simtab <- reactive({simulate(nid=input$nid,beta0=input$beta0,beta1=input$beta1,sd.y=input$sd.y,V0=input$V0,sigma0=input$sigma0,V1=input$V1,sigma1=input$sigma1,rho=input$rho,ncount=input$ncount,min.interval=input$min.interval,max.interval=input$max.interval,seed=input$seed)})
   
@@ -152,19 +153,19 @@ server <- function(input, output) {
   output$simplot <- renderPlot({simplot()})
   
   # Call example data, if "example" chosen    
-  example <- reactive({dpm$example[[2]]})
+  example <- reactive({simulate(nid=50,beta0=15,beta1=0.5,sd.y=10,V0=0,sigma0=10,V1=0,sigma1=5,rho=0.7,ncount=10,min.interval=0.5,max.interval=3,seed=11)})
   
   observeEvent(input$example.data, {
-    write.csv(example(),"output/simdata.csv",row.names = F)
+    write.csv(example()[[2]],"output/simdata.csv",row.names = F)
   })
   
   
   
-  output$example <- renderDT({example()})
+  output$example <- renderDT({example()[[2]]})
   
   exampleplot <- reactive({
     
-    ggplot(aes(x=time,y=Ytime,group=id),data=example())+
+    ggplot(aes(x=time,y=Ytime,group=id),data=example()[[2]])+
       geom_line()+
       geom_point()+
       theme_pubr()})
@@ -175,12 +176,9 @@ server <- function(input, output) {
   
   output$id.update<- renderUI({numericInput("id.update","Enter the individual ID, of whom the random effects and the future outcome will be predicted.",input$nid,min=11,max=input$nid)})
   
-  #read <- reactive({dattab <-ifelse(input$dataset=="create",read.csv("output/create.csv"),read.csv("output/example.csv"))})
-  #dattab <- renderTable(read())
-  
+
   output$timeID<- renderUI({
-    #dattab <-ifelse(input$dataset=="create",read.csv("output/create.csv"),read.csv("output/example.csv"))
-    #write.csv(dattab,"output/simdata.csv",row.names = F)
+
     selectInput("time.plot","Enter the time point, from which the future outcome will be predicted.",choices=dattab$time[dattab$id==input$id.update] )})
   
   dattab <- read.csv("output/simdata.csv")

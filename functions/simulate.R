@@ -32,5 +32,3 @@ simulate <- function(nid,beta0,beta1,sd.y,V0,sigma0,V1,sigma1,rho,ncount,min.int
   
 }
 
-
-assign("example",simulate(nid=50,beta0=15,beta1=0.5,sd.y=10,V0=0,sigma0=10,V1=0,sigma1=5,rho=0.7,ncount=10,min.interval=0.5,max.interval=3,seed=11),envir=dpm)
